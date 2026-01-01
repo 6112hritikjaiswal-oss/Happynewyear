@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&family=Dancing+Script:wght@600&family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --primary: #ff4081;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(to bottom, #020024 0%, #090979 35%, #000000 100%);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        /* --- STARRY BACKGROUND --- */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: twinkle var(--duration) infinite ease-in-out;
+            z-index: 0;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 10px white; }
+        }
+
+        /* Screens Manager */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 10;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* --- SCREEN 1: TAP & HOLD --- */
+        .loader-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-top: 20px;
+        }
+
+        svg {
+            transform: rotate(-90deg);
+            width: 100%; height: 100%;
+        }
+
+        circle {
+            fill: none;
+            stroke-width: 5;
+            stroke-linecap: round;
+        }
+
+        .bg-ring { stroke: rgba(255,255,255,0.2); }
+        .progress-ring {
+            stroke: var(--primary);
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            transition: stroke-dashoffset 0.1s linear;
+            filter: drop-shadow(0 0 5px var(--primary));
+        }
+
+        .heart-icon {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            user-select: none;
+            animation: beat 1s infinite;
+        }
+
+        @keyframes beat {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        /* --- SCREEN 2: DISTRACTIONS --- */
+        .card-stack {
+            position: relative;
+            width: 260px;
+            height: 360px;
+        }
+
+        .distraction-card {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: transform 0.6s ease, opacity 0.6s;
+            cursor: pointer;
+            border: 3px solid white;
+        }
+
+        .c-stress { background: #ffeb3b; transform: rotate(-5deg); z-index: 4; }
+        .c-bad { background: #ff9a9e; transform: rotate(3deg); z-index: 3; }
+        .c-work { background: #81ecec; transform: rotate(-2deg); z-index: 2; }
+        
+        .gift-box {
+            background: linear-gradient(135deg, #ff00cc, #333399);
+            color: white;
+            z-index: 1;
+            flex-direction: column;
+            cursor: default;
+        }
+        
+        .fly-away-left { transform: translate(-300px, 100px) rotate(-45deg); opacity: 0; }
+        .fly-away-right { transform: translate(300px, 100px) rotate(45deg); opacity: 0; }
+
+        /* --- SCREEN 3: GOLDEN TICKET --- */
+        .ticket {
+            background: rgba(26, 26, 26, 0.9);
+            border: 2px solid #ffd700;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 350px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+            backdrop-filter: blur(5px);
+        }
+
+        .ticket h2 { color: #ffd700; margin-bottom: 10px; letter-spacing: 2px; }
+        .ticket p { color: #ccc; font-size: 0.9rem; margin-bottom: 20px; }
+        .ticket-btn {
+            background: transparent;
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.3s;
+        }
+        .ticket-btn:hover { background: #ffd700; color: #000; box-shadow: 0 0 15px #ffd700; }
+
+        /* --- SCREEN 4: PHOTO GALLERY --- */
+        .polaroid-stack {
+            position: relative;
+            width: 280px;
+            height: 380px;
+        }
+        .polaroid {
+            position: absolute;
+            background: white;
+            padding: 15px 15px 50px 15px;
+            width: 100%; height: 100%;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            transition: transform 0.5s;
+            cursor: pointer;
+            transform: rotate(var(--r));
+            color: #333;
+            font-family: 'Handlee', cursive;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .polaroid img {
+            position: absolute; top: 15px; left: 15px;
+            width: calc(100% - 30px);
+            height: calc(100% - 80px);
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        /* --- SCREEN 5: STYLISH BOOK --- */
+        .book-scene {
+            perspective: 1500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .book {
+            position: relative;
+            width: 300px;
+            height: 480px;
+            transform-style: preserve-3d;
+            transition: transform 1s ease-in-out;
+            cursor: pointer;
+        }
+
+        .book.open {
+            transform: translateX(50%) rotateY(0deg); /* Shifts right to center spread */
+        }
+        
+        /* Mobile adjust */
+        @media(max-width: 600px) {
+            .book.open {
+                transform: translateX(10%) rotateY(0deg); 
+            }
+        }
+
+        .book-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            transform-origin: left;
+            transition: transform 1s ease-in-out;
+            border-radius: 5px 15px 15px 5px;
+            backface-visibility: hidden;
+        }
+
+        /* FRONT COVER */
+        .cover-front {
+            z-index: 5;
+            background: linear-gradient(135deg, #800000 0%, #3a0000 100%);
+            color: #ffd700;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #ffd700;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .cover-border {
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            width: 85%; height: 90%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* INSIDE LEFT */
+        .cover-inside-left {
+            z-index: 4;
+            background: #fffef0;
+            transform: rotateY(180deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-left: 5px solid #ccc;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* INSIDE RIGHT */
+        .page-right {
+            z-index: 1;
+            background: #fffef0;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            text-align: left;
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1);
+            border-left: 2px solid #ddd;
+        }
+
+        .book.open .cover-front {
+            transform: rotateY(-180deg);
+            z-index: 1;
+        }
+        
+        /* TEXT STYLING */
+        .handwritten {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.15rem;
+            line-height: 1.5;
+            color: #444;
+            overflow-y: auto;
+            height: 100%;
+        }
+        
+        .handwritten::-webkit-scrollbar { width: 0; }
+
+        .title-font {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="stars-container"></div>
+
+    <div class="screen active" id="s1">
+        <h2 style="margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.5);">A little surprise for you<br><span style="font-size: 0.8em; opacity: 0.7;">Before this year begins</span></h2>
+        
+        <div class="loader-container">
+            <svg>
+                <circle class="bg-ring" cx="60" cy="60" r="50" />
+                <circle class="progress-ring" id="progress" cx="60" cy="60" r="50" />
+            </svg>
+            <div class="heart-icon" id="holdBtn">❤️</div>
+        </div>
+        
+        <p style="margin-top: 20px; font-size: 0.8rem; opacity: 0.8;">Tap and Hold</p>
+    </div>
+
+    <div class="screen" id="s2">
+        <h2 style="margin-bottom: 30px;">Move the little distractions aside</h2>
+        <div class="card-stack">
+            <div class="distraction-card gift-box" onclick="showTicket()">
+                <div style="font-size: 3rem;">🎁</div>
+                <p>Tap to open</p>
+            </div>
+            <div class="distraction-card c-work" onclick="toss(this)">Work 💼</div>
+            <div class="distraction-card c-bad" onclick="toss(this)">Bad Days 🌧️</div>
+            <div class="distraction-card c-stress" onclick="toss(this)">Stress 🤯</div>
+        </div>
+    </div>
+
+    <div class="screen" id="s3">
+        <div class="ticket">
+            <div style="color:#ffd700; font-size: 2rem; margin-bottom: 10px;">🎫</div>
+            <h2>GOLDEN TICKET</h2>
+            <p>VALID FOR EVERY DAY AHEAD</p>
+            <p style="font-family: 'Handlee', cursive; font-size: 1.2rem; color: white;">"Unlimited Love & Smiles"</p>
+            <button class="ticket-btn" onclick="nextScreen(3)">CLAIM TICKET ></button>
+        </div>
+    </div>
+
+    <div class="screen" id="s4">
+        <h2 style="margin-bottom: 20px;">Some moments from this year</h2>
+        <div class="polaroid-stack" id="gallery">
+            
+            <div class="polaroid" style="--r: -2deg;" onclick="nextPhoto(this, true)">
+                <img src="Last.jpg" alt="Last Photo">
+                Final Moment ❤️
+            </div>
+
+            <div class="polaroid" style="--r: 2deg;" onclick="nextPhoto(this)">
+                <img src="Moon.jpg" alt="Moon Memory">
+                Us looking at moon 🌙
+            </div>
+
+            <div class="polaroid" style="--r: -4deg;" onclick="nextPhoto(this)">
+                <img src="Smile.jpg" alt="Smile Memory">
+                Cute Smiles 😊
+            </div>
+
+        </div>
+        <p style="margin-top: 20px; opacity: 0.8;">Tap the photo</p>
+    </div>
+
+    <div class="screen" id="s5">
+        <h2 style="margin-bottom: 20px; opacity: 0.8;">For my Cutiepie :)</h2>
+        
+        <div class="book-scene">
+            <div class="book" onclick="this.classList.toggle('open')">
+                
+                <div class="book-page cover-front">
+                    <div class="cover-border">
+                        <h1 class="title-font">Happy<br>New Year<br>2026</h1>
+                        <div style="font-size: 2rem; margin-top: 20px;">❄️ ❤️</div>
+                        <p style="margin-top: 30px; letter-spacing: 2px;">OPEN ME</p>
+                    </div>
+                </div>
+
+                <div class="book-page cover-inside-left">
+                    <div style="text-align: center; color: #555;">
+                        <div style="font-size: 3rem;">✨</div>
+                        <p style="font-family: 'Dancing Script', cursive; font-size: 1.5rem;">To New Beginnings</p>
+                    </div>
+                </div>
+
+                <div class="book-page page-right">
+                    <div class="handwritten">
+                        <p><strong>My Dear,</strong></p>
+                        <br>
+                        <p>Another year is beginning, and all I can think about is you. You came into my life like a blessing and turned my ordinary days into something beautiful.</p>
+                        <br>
+                        <p>With you, I've learned what real love feels like - comfort, trust, and endless care. No matter what this new year brings, I want to face every happiness and every challenge with you by my side.</p>
+                        <br>
+                        <p>Thank you for loving me, understanding me, and never giving up on us. I promise to hold your hand tighter and love you deeper in this new year.</p>
+                        <br>
+                        <p style="color: #d63031; text-align: right; margin-top: 10px;">Happy New Year,<br>my cute best friend ❣️🤗</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <p style="margin-top: 25px; opacity: 0.6;">Tap the book to open</p>
+    </div>
+
+    <script>
+        // --- CREATE STARRY BACKGROUND ---
+        function createStars() {
+            const container = document.body;
+            for(let i=0; i<100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = Math.random() * 2 + 1;
+                const duration = Math.random() * 3 + 2;
+                star.style.left = `${x}vw`;
+                star.style.top = `${y}vh`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.setProperty('--duration', `${duration}s`);
+                container.appendChild(star);
+            }
+        }
+        createStars();
+
+        // --- TAP AND HOLD LOGIC ---
+        const btn = document.getElementById('holdBtn');
+        const ring = document.getElementById('progress');
+        let interval;
+        let progress = 314;
+
+        const start = (e) => {
+            if(e.cancelable) e.preventDefault();
+            interval = setInterval(() => {
+                progress -= 10;
+                if(progress <= 0) {
+                    progress = 0;
+                    ring.style.strokeDashoffset = 0;
+                    clearInterval(interval);
+                    nextScreen(1);
+                } else {
+                    ring.style.strokeDashoffset = progress;
+                }
+            }, 30);
+        };
+
+        const stop = () => {
+            clearInterval(interval);
+            progress = 314;
+            ring.style.strokeDashoffset = 314;
+        };
+
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('touchstart', start);
+        window.addEventListener('mouseup', stop);
+        window.addEventListener('touchend', stop);
+
+        // --- NAVIGATION ---
+        function nextScreen(currentIdx) {
+            document.getElementById(`s${currentIdx}`).classList.remove('active');
+            setTimeout(() => {
+                document.getElementById(`s${currentIdx+1}`).classList.add('active');
+            }, 500);
+        }
+
+        // --- DISTRACTION CARDS ---
+        function toss(el) {
+            let dir = Math.random() > 0.5 ? 'fly-away-right' : 'fly-away-left';
+            el.classList.add(dir);
+            setTimeout(() => el.style.display = 'none', 600);
+        }
+
+        function showTicket() {
+            nextScreen(2);
+        }
+
+        // --- PHOTO GALLERY ---
+        function nextPhoto(el, isLast = false) {
+            el.style.transform = "translate(200px, -200px) rotate(45deg)";
+            el.style.opacity = "0";
+            if(isLast) {
+                setTimeout(() => nextScreen(4), 500);
+            }
+        }
+    </script>
+</body>
+</html>
